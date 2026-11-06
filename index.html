@@ -127,6 +127,28 @@
   </footer>
 </main>
 
+<div class="ask" hidden>
+  <div class="ask-panel" hidden>
+    <div class="ask-head">
+      <p class="ask-title">Ask about Vansh</p>
+      <button type="button" class="ask-close" aria-label="Close the answers">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <p class="ask-note">Answers come from this page.</p>
+    <div class="ask-log" role="log" aria-live="polite"></div>
+    <div class="ask-chips" role="group" aria-label="Suggested questions"></div>
+  </div>
+  <form class="ask-bar" aria-label="Ask about Vansh">
+    <label class="sr-only" for="ask-input">Ask a question about Vansh</label>
+    <input id="ask-input" type="text" placeholder="Ask about his studies, work or Sparky" autocomplete="off" maxlength="200">
+    <button type="submit" class="ask-send" aria-label="Send the question">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M13 6l6 6-6 6"></path></svg>
+    </button>
+  </form>
+</div>
+
+<script src="chat.js" defer></script>
 <script src="trail.js" defer></script>
 </body>
 </html>
