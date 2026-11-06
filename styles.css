@@ -148,6 +148,8 @@ footer { padding: 2rem 0 3rem; color: var(--muted); font-size: 0.9rem; }
 .ask-you p { color: var(--muted); }
 .ask-you p::before { content: "You: "; font-weight: 600; }
 .ask-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-top: 0.4rem !important; }
+.ask-fallback, .ask-wait { color: var(--muted); font-size: 0.875rem; }
+.ask-fallback { margin-top: 0.35rem !important; }
 .ask-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--rule); }
 .ask-chip {
   border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 999px;

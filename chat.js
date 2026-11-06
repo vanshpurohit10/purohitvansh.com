@@ -1,8 +1,11 @@
-// The "ask about Vansh" bar. No AI and no server: it answers from what this page already says,
-// by matching the question's words (English and a little Hinglish) to a short list of topics,
-// and says so plainly when it does not know. Everything it shows is built with textContent.
+// The "ask about Vansh" bar. Questions go to a small Cloudflare Worker that asks Google's Gemini,
+// with only the facts on this page as its brief (the API key lives in the Worker, never here).
+// If the Worker is down, slow or over its limit, the bar answers offline by matching the
+// question's words to a short list of topics. Everything it shows is built with textContent.
 (() => {
   const EMAIL = "work.vanshpurohit@gmail.com";
+  const API = "https://purohitvansh-chat.purohitvansh-chat-worker.workers.dev";
+  const TIMEOUT_MS = 15000;
   const LINKEDIN = "https://www.linkedin.com/in/purohitvansh/";
 
   // each topic: the words that point to it, and the answer (text, then optional links)
@@ -97,13 +100,55 @@
     log.scrollTop = log.scrollHeight;
   }
 
-  function ask(q) {
-    q = q.trim();
-    if (!q) return;
+  // links to offer under an AI answer, when it mentions what they point to
+  function linksFor(text) {
+    const t = text.toLowerCase(), out = [];
+    if (t.includes(EMAIL) || /email/.test(t)) out.push(["Email Vansh", `mailto:${EMAIL}`]);
+    if (t.includes("linkedin")) out.push(["LinkedIn profile", LINKEDIN]);
+    if (t.includes("sparky")) out.push(["View Sparky", "sparky/"]);
+    return out;
+  }
+
+  const history = [];   // [{role: "user"|"model", text}], the Worker keeps only the last five
+  let busy = false;
+
+  async function ask(q) {
+    q = q.trim().slice(0, 500);
+    if (!q || busy) return;
+    busy = true;
     open();
     say("you", q);
-    const a = answer(q);
-    say("page", a.text, a.links);
+    history.push({ role: "user", text: q });
+    const wait = document.createElement("div");
+    wait.className = "ask-msg ask-page ask-wait";
+    wait.textContent = "Thinking…";
+    log.appendChild(wait);
+    log.scrollTop = log.scrollHeight;
+    let text = null, note = null;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+      const r = await fetch(API, { method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: history.slice(-5) }), signal: ctrl.signal });
+      clearTimeout(timer);
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && typeof data.text === "string") text = data.text;
+      else if (r.status === 429) note = data.text || "Today's question limit is reached.";
+    } catch (e) { /* offline answer below */ }
+    wait.remove();
+    if (text) {
+      history.push({ role: "model", text });
+      say("page", text, linksFor(text));
+    } else {
+      history.pop();
+      const a = answer(q);
+      say("page", a.text, a.links);
+      const n = document.createElement("p");
+      n.className = "ask-fallback";
+      n.textContent = note ? `${note} This answer is from the page.` : "The AI is unavailable right now, so this answer is from the page.";
+      log.lastChild.appendChild(n);
+    }
+    busy = false;
   }
 
   for (const [label, q] of SUGGEST) {
